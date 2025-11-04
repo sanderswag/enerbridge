@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EnerBridge • EnerBridge – Enova & Green Financing (Prototype)</title>
+
+<!-- Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0"></script>
+
+<script>
+  // --- Robust registration for Chart.js v4 annotation plugin (UMD globals vary) ---
+  (function(){
+    try{
+      // Most CDN UMD builds expose ChartAnnotation
+      if (window.ChartAnnotation) { Chart.register(window.ChartAnnotation); }
+      // Some builds expose this name:
+      else if (window['chartjs-plugin-annotation']) { Chart.register(window['chartjs-plugin-annotation']); }
+    }catch(e){
+      console.warn('Chart annotation plugin not registered:', e);
+    }
+  })();
+</script>
+
+<style>
+  :root{
+    --bg:#ffffff; --ink:#0b0f14; --ink-soft:#243140; --muted:#5f6b76;
+    --line:#e6ebef; --card:#f7fafb;
+    --accent:#1f8a52; --accent-2:#8ad1ae;
+    --warn:#d99000; --bad:#c93847; --ok:#1f8a52;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+
+  /* Topbar */
+  .topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+  .nav{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:16px;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.2px;color:var(--ink);text-decoration:none;font-size:18px}
+  .logo-dot{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#1f8a52,#8ad1ae)}
+  .navlinks{display:flex;gap:16px;align-items:center}
+  .navlinks a{color:var(--ink-soft);text-decoration:none;font-weight:600}
+  .nav-cta{display:flex;gap:8px;align-items:center}
+  .avatar{width:28px;height:28px;border-radius:999px;background:#e8f5ee;border:1px solid #d7eadd;display:inline-block}
+  .logo-img {
+  height: 28px;
+  width: auto;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+
+  .wrap{max-width:1240px;margin:28px auto;padding:0 20px}
+  header{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin:8px 0 14px}
+  h1{font-size:28px;line-height:1.15;margin:0}
+  .sub{color:var(--muted);max-width:820px}
+
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .span3{grid-column:span 3}.span4{grid-column:span 4}.span5{grid-column:span 5}
+  .span6{grid-column:span 6}.span7{grid-column:span 7}.span8{grid-column:span 8}.span12{grid-column:span 12}
+
+  label{display:block;font-weight:600;margin:8px 0 6px}
+  input[type="number"],input[type="date"],input[type="text"],select{
+    width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink)
+  }
+  input[readonly]{background:#f3f6f7;color:#3b4955}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .muted{color:var(--muted)}
+  .kv{display:flex;flex-direction:column;gap:2px}
+
+  /* KPI cards */
+  .kpi{
+    display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+    padding:16px 18px;min-width:230px;background:#fff;border:1px solid var(--line);border-radius:16px
+  }
+  .kpi .stat-label{font-size:12px;font-weight:700;color:#485767;letter-spacing:.02em}
+  .kpi .stat-value{font-size:22px;font-weight:800;color:var(--ink);line-height:1}
+  .kpi.compact .stat-value{font-size:20px}
+  @media (max-width:980px){ .kpi{min-width:unset;flex:1} }
+
+  .pill{padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px;display:inline-block;border:1px solid transparent}
+  .ok{color:var(--ok);background:#e9f6ee;border-color:#cbe8d6}
+  .warn{color:var(--warn);background:#fff6e7;border-color:#ffe6b8}
+  .bad{color:var(--bad);background:#fdecee;border-color:#f7c9cf}
+
+  .btn{background:var(--ink);color:#fff;border:0;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+  .btn.secondary{background:#f0f4f6;color:#0b0f14;border:1px solid var(--line)}
+  .btn.ghost{background:transparent;border:1px dashed var(--line);color:#3b4955}
+  .btn.accent{background:var(--accent)}
+  .btn.bankid{background:#005aa6}
+
+  hr.sep{border:0;border-top:1px solid var(--line);margin:8px 0}
+
+  table{width:100%;border-collapse:separate;border-spacing:0 8px}
+  th,td{padding:10px 8px;text-align:left}
+  th{color:#3b4955;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  tbody tr{background:#fff;border:1px solid var(--line)}
+  tbody td:first-child{border-radius:12px 0 0 12px}
+  tbody td:last-child{border-radius:0 12px 12px 0}
+  td.right{text-align:right}
+  .del{background:transparent;border:0;color:#516273;cursor:pointer}
+
+  .section-title{display:flex;align-items:center;gap:10px;margin:6px 0 4px}
+  .section-title h3{margin:0;font-size:18px}
+  .badge{font-size:11px;padding:4px 8px;border-radius:999px;background:#eef6f0;color:#1f8a52;border:1px solid #d7eadd}
+
+  .slider-row{display:grid;grid-template-columns:200px 1fr 80px;gap:10px;align-items:center}
+  input[type="range"]{width:100%}
+  .tiny{font-size:12px;color:#5a6773}
+  .code{display:block;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#22303a;background:#f6f9fa;border:1px solid var(--line);border-radius:12px;padding:12px}
+
+  /* Apply bar */
+  .applybar{margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+  .applybar .left{display:flex;gap:12px;align-items:center}
+  .applybar .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1f8a52,#8ad1ae)}
+
+  /* ---- Green lender comparison ---- */
+  .comp-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .comp-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .comp-span6{grid-column:span 6}.comp-span12{grid-column:span 12}
+  .weight-row{display:grid;grid-template-columns:180px 1fr 60px;gap:10px;align-items:center}
+  .sortable th{cursor:pointer}
+  .badge-esg{background:#e9f4ff;border:1px solid #cfe6ff;color:#0d4a7e}
+</style>
+</head>
+<body>
+
+<!-- HEADER / NAV -->
+<div class="topbar">
+  <div class="nav">
+   <a class="brand" href="#">
+  <img src="logo.png" alt="KraftKompis logo" class="logo-img">
+  
+</a>
+    <div class="navlinks">
+      <a href="#credit">Credit</a>
+      <a href="#grant">Grant</a>
+      <a href="#compare">Lenders</a>
+      <a href="#flow">Cash flow</a>
+      <a href="#reporting">Reporting</a>
+      <a href="#" id="resetExample" title="Reload default example">Reset to example</a>
+    </div>
+    <div class="nav-cta">
+      <button class="btn ghost" id="saveBtn" title="Save to this browser">Save draft</button>
+      <button class="btn ghost" id="loadBtn" title="Load from this browser">Load</button>
+      <button class="btn secondary" onclick="alert('Sign-in coming ✨')">Sign in</button>
+      <span class="avatar" title="My profile"></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1>EnerBridge — Enova application helper & Green Financing decider</h1>
+    <div class="sub">Prototype that blends Enova compliance, energy data and financing (bridge → grant → term), including credit scoring, stress testing, and green lender comparison.</div>
+  </header>
+
+  <!-- PROGRAM / ENERGY / FINANCING -->
+  <section class="grid">
+    <div class="card span4">
+      <div class="section-title"><h3>Program profile</h3><span class="badge">Enova</span></div>
+      <label for="preset">Select</label>
+      <select id="preset">
+        <option value="custom">Custom</option>
+        <option value="yrkesbygg">Commercial buildings – energy condition improvement (30% / 10 MNOK)</option>
+        <option value="kartlegging">Energy audit in commercial buildings (50% / 400k)</option>
+      </select>
+      <label>Support rate (% of cost)</label>
+      <input id="rate" type="number" value="30" min="0" max="100" step="0.1">
+      <label>Max grant (NOK)</label>
+      <input id="cap" type="number" value="10000000" step="1000">
+      <p class="tiny">Processing time: typically up to 2 weeks.</p>
+    </div>
+
+    <div class="card span4">
+      <div class="section-title"><h3>Energy parameters</h3></div>
+      <label>Energy price (NOK/kWh)</label>
+      <input id="price" type="number" value="1.2" step="0.01" min="0">
+      <label>Discount rate for NPV (%)</label>
+      <input id="disc" type="number" value="6" step="0.1">
+      <label>Analysis horizon (years)</label>
+      <input id="horizon" type="number" value="10" step="1">
+    </div>
+
+    <div class="card span4">
+      <div class="section-title"><h3>Financing</h3><span class="badge">Green discount</span></div>
+      <label>Base interest rate (% p.a.)</label>
+      <input id="rateInt" type="number" value="6.0" step="0.1">
+      <label>Green discount (≥20% reduction)</label>
+      <input id="greenDisc" type="number" value="0.5" step="0.1">
+      <label>Term loan tenor (years)</label>
+      <input id="term" type="number" value="5" step="1">
+    </div>
+  </section>
+
+  <!-- COMPLIANCE & DOCS -->
+  <section class="grid" style="margin-top:6px">
+    <div class="card span6">
+      <div class="section-title"><h3>Enova — compliance</h3></div>
+      <div class="row">
+        <div class="kv" style="flex:1">
+          <label>Application date</label>
+          <input id="appDate" type="date">
+        </div>
+        <div class="kv" style="flex:1">
+          <label>Project start date</label>
+          <input id="startDate" type="date">
+        </div>
+      </div>
+      <div id="complianceFlags" style="margin-top:10px"></div>
+      <hr class="sep">
+      <div class="row">
+        <div class="kv"><span class="tiny">Weighted reduction (all buildings)</span><span class="pill" id="wgtBadge">–</span></div>
+        <div class="kv"><span class="tiny">Grant (estimated)</span><span class="pill ok" id="grantBadge">–</span></div>
+        <div class="kv"><span class="tiny">Loan need after grant</span><span class="pill" id="needBadge">–</span></div>
+      </div>
+    </div>
+
+    <div class="card span6">
+      <div class="section-title"><h3>Documents (checklist)</h3></div>
+      <label><input type="checkbox" id="docEPC"> Energy certificate (after 15.06.2015)</label>
+      <label><input type="checkbox" id="docCosts"> Cost documentation</label>
+      <label><input type="checkbox" id="docBefore"> Application submitted before project start</label>
+      <label><input type="checkbox" id="docFinal"> Final report (post-project)</label>
+      <p class="tiny">Tick relevant boxes before seeking financing.</p>
+    </div>
+  </section>
+
+  <!-- BUILDINGS -->
+  <section class="card" style="margin-top:6px">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="section-title"><h3>Buildings in application</h3></div>
+      <div class="row">
+        <button class="btn accent" id="addRow">+ Add building</button>
+        <button class="btn secondary" id="clearAll">Clear</button>
+        <button class="btn ghost" id="exportCSV">Export CSV</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+      <tr>
+        <th>Building</th>
+        <th>Category</th>
+        <th class="right">Delivered (kWh/yr)</th>
+        <th class="right">Reduction (kWh)</th>
+        <th class="right">Reduction (%)</th>
+        <th class="right">New energy</th>
+        <th>≥20%</th>
+        <th class="right">Cost (NOK)</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot>
+      <tr>
+        <td><strong>TOTAL</strong></td>
+        <td></td>
+        <td class="right" id="sumBase">–</td>
+        <td class="right" id="sumRed">–</td>
+        <td class="right" id="waPct">–</td>
+        <td class="right" id="sumNew">–</td>
+        <td></td>
+        <td class="right" id="sumCost">–</td>
+        <td></td>
+      </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <!-- KPI ROW -->
+  <section class="grid" style="margin-top:6px">
+    <div class="card span12">
+      <div class="row">
+        <div class="kpi"><span class="stat-label">Project cost</span><span class="stat-value" id="k_cost">–</span></div>
+        <div class="kpi"><span class="stat-label">Grant estimate</span><span class="stat-value" id="k_grant">–</span></div>
+        <div class="kpi"><span class="stat-label">Loan need</span><span class="stat-value" id="k_need">–</span></div>
+        <div class="kpi"><span class="stat-label">Annual savings</span><span class="stat-value" id="k_save">–</span></div>
+        <div class="kpi compact"><span class="stat-label">Payback</span><span class="stat-value" id="k_payback">–</span></div>
+        <div class="kpi"><span class="stat-label">NPV</span><span class="stat-value" id="k_npv">–</span></div>
+        <div class="kpi compact"><span class="stat-label">DSCR</span><span class="stat-value" id="k_dscr">–</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREDIT + STRESS -->
+  <section class="grid" id="credit" style="margin-top:6px">
+    <div class="card span6">
+      <div class="section-title"><h3>Credit map (DSCR vs LTV)</h3></div>
+      <canvas id="creditChart" height="260"></canvas>
+      <p class="tiny">Green zone: DSCR ≥ 1.2 and LTV ≤ 85%.</p>
+    </div>
+    <div class="card span6">
+      <div class="section-title"><h3>Stress scenario</h3></div>
+      <div class="slider-row">
+        <span>Interest (Δ pp)</span>
+        <input id="s_rate" type="range" min="-2" max="2" step="0.1" value="0">
+        <span id="s_rate_v">0.0 pp</span>
+      </div>
+      <div class="slider-row">
+        <span>Energy price (Δ %)</span>
+        <input id="s_price" type="range" min="-20" max="20" step="1" value="0">
+        <span id="s_price_v">0 %</span>
+      </div>
+      <div class="slider-row">
+        <span>Achieved reduction (Δ %-points)</span>
+        <input id="s_redux" type="range" min="-10" max="10" step="1" value="0">
+        <span id="s_redux_v">0 pp</span>
+      </div>
+      <hr class="sep">
+      <div class="row">
+        <div class="kpi compact"><span class="stat-label">DSCR (stress)</span><span class="stat-value" id="st_dscr">–</span></div>
+        <div class="kpi compact"><span class="stat-label">PD (proxy)</span><span class="stat-value" id="st_pd">–</span></div>
+        <div class="kpi"><span class="stat-label">NPV (stress)</span><span class="stat-value" id="st_npv">–</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GREEN LENDER COMPARISON -->
+  <section class="comp-grid" id="compare" style="margin-top:6px">
+    <div class="comp-card comp-span6">
+      <div class="section-title">
+        <h3>Green lender comparison</h3>
+        <span class="badge badge-esg">Mock demo</span>
+      </div>
+
+      <p class="tiny">Tune weights to rank lenders (0–100 composite score).</p>
+
+      <div class="weight-row">
+        <span>Rate (lower is better)</span>
+        <input id="w_rate" type="range" min="0" max="5" step="0.5" value="3">
+        <span id="w_rate_v" class="tiny">3.0</span>
+      </div>
+      <div class="weight-row">
+        <span>DSCR tolerance (higher is better)</span>
+        <input id="w_dscr" type="range" min="0" max="5" step="0.5" value="3">
+        <span id="w_dscr_v" class="tiny">3.0</span>
+      </div>
+      <div class="weight-row">
+        <span>LTV headroom (higher is better)</span>
+        <input id="w_ltv" type="range" min="0" max="5" step="0.5" value="2">
+        <span id="w_ltv_v" class="tiny">2.0</span>
+      </div>
+      <div class="weight-row">
+        <span>Green discount (higher is better)</span>
+        <input id="w_green" type="range" min="0" max="5" step="0.5" value="3.5">
+        <span id="w_green_v" class="tiny">3.5</span>
+      </div>
+      <div class="weight-row">
+        <span>Fees (lower is better)</span>
+        <input id="w_fee" type="range" min="0" max="5" step="0.5" value="1.5">
+        <span id="w_fee_v" class="tiny">1.5</span>
+      </div>
+      <div class="weight-row">
+        <span>ESG policy strength</span>
+        <input id="w_esg" type="range" min="0" max="5" step="0.5" value="3.5">
+        <span id="w_esg_v" class="tiny">3.5</span>
+      </div>
+
+      <hr class="sep">
+      <div class="row">
+        <div class="kpi"><span class="stat-label">Top score</span><span class="stat-value" id="cmp_top">–</span></div>
+        <div class="kpi"><span class="stat-label">Leader</span><span class="stat-value" id="cmp_leader">–</span></div>
+      </div>
+    </div>
+
+    <div class="comp-card comp-span6">
+      <div class="section-title"><h3>Scores</h3></div>
+      <canvas id="cmpChart" height="240"></canvas>
+    </div>
+
+    <div class="comp-card comp-span12">
+      <div class="section-title"><h3>Details (click headers to sort)</h3></div>
+      <table class="sortable">
+        <thead>
+          <tr>
+            <th data-k="name">Lender</th>
+            <th class="right" data-k="baseRate">Rate %</th>
+            <th class="right" data-k="greenDisc">Green disc. pp</th>
+            <th class="right" data-k="maxLTV">Max LTV</th>
+            <th class="right" data-k="minDSCR">Min DSCR</th>
+            <th class="right" data-k="feeBps">Fee (bps)</th>
+            <th class="right" data-k="esgScore">ESG policy</th>
+            <th class="right" data-k="taxonomy">EU taxonomy</th>
+            <th class="right" data-k="score">Score</th>
+          </tr>
+        </thead>
+        <tbody id="cmpBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MULTI-STAGE FLOW -->
+  <section class="grid" id="flow" style="margin-top:6px">
+    <div class="card span7">
+      <div class="section-title"><h3>Cash flow — bridge → grant → term</h3></div>
+      <canvas id="flowChart" height="280"></canvas>
+      <p class="tiny">Bridge loan (3–6 months), Enova disbursement, then term-loan amortization (annuity).</p>
+    </div>
+    <div class="card span5">
+      <div class="section-title"><h3>Bridge/term parameters</h3></div>
+      <label>Bridge tenor (months)</label>
+      <input id="bridgeMonths" type="number" value="6" min="1" max="12" step="1">
+      <label>Bridge rate (% p.a.)</label>
+      <input id="bridgeRate" type="number" value="8.0" step="0.1">
+      <label>Share covered by bridge (of grant + cost)</label>
+      <input id="bridgeShare" type="number" value="100" step="5" min="0" max="100">
+      <hr class="sep">
+      <div class="row">
+        <div class="kpi"><span class="stat-label">Blended effective rate</span><span class="stat-value" id="blend_rate">–</span></div>
+        <div class="kpi"><span class="stat-label">Total interest</span><span class="stat-value" id="sum_interest">–</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTING TIMELINE -->
+  <section class="grid" id="reporting" style="margin-top:6px">
+    <div class="card span12">
+      <div class="section-title"><h3>Reporting timeline</h3></div>
+      <canvas id="timelineChart" height="180"></canvas>
+      <p class="tiny">Interim reports shown as 1-month bars; final report as 6 months (18–24).</p>
+    </div>
+  </section>
+
+  <!-- UNDERWRITING / JSON -->
+  <section class="grid" style="margin-top:6px">
+    <div class="card span12" id="uw">
+      <div class="section-title"><h3>Underwriting & offers (simulated)</h3></div>
+      <div id="offers"></div>
+    </div>
+
+    <div class="card span12">
+      <div class="row" style="gap:10px">
+        <button class="btn accent" id="makeTerm">Generate Term Sheet</button>
+        <button class="btn secondary" id="exportJSON">Export application (JSON)</button>
+        <button class="btn ghost" id="printTS">Print / PDF</button>
+      </div>
+      <div id="termSheet" style="margin-top:10px"></div>
+      <details style="margin-top:8px">
+        <summary>Payload (JSON) — for lender API</summary>
+        <code class="code" id="jsonOut"></code>
+      </details>
+    </div>
+  </section>
+
+  <!-- APPLY / BANKID -->
+  <section id="grant" class="applybar" style="margin-top:14px">
+    <div class="left">
+      <div class="logo"></div>
+      <div>
+        <strong>Apply for grant & financing</strong><br>
+        <span class="tiny">Submit the Enova application and obtain financing via KraftKompis.</span>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn secondary" onclick="alert('Application wizard coming ✨')">Apply for grant</button>
+      <button class="btn bankid" onclick="alert('BankID signing (demo) ✨')">Sign with BankID</button>
+    </div>
+  </section>
+
+  <div style="height:28px"></div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'kk_state_v1';
+
+  const fmtKr = n=> (n||n===0)? n.toLocaleString('no-NO',{style:'currency',currency:'NOK',maximumFractionDigits:0}) : '–';
+  const fmtPct = n=> (n||n===0)? (n*100).toFixed(1)+' %' : '–';
+  const fmtInt = n=> (n||n===0)? n.toLocaleString('no-NO') : '–';
+  const qs = s=>document.querySelector(s);
+  const tbody = qs('#tbody');
+  let creditChart, flowChart, timelineChart, cmpChart;
+
+  // ---------- Example dataset ----------
+  function exampleState(){
+    const today = new Date();
+    const toISO = d => d.toISOString().slice(0,10);
+    const start = new Date(today); start.setDate(start.getDate()+30);
+    return {
+      inputs:{
+        preset:'yrkesbygg',
+        rate:30, cap:10000000,
+        price:1.20, disc:6, horizon:10,
+        rateInt:6.0, greenDisc:0.5, term:5,
+        appDate: toISO(today),
+        startDate: toISO(start),
+        docs:{epc:true,costs:true,before:true,final:false},
+        bridgeMonths:6, bridgeRate:8.0, bridgeShare:100
+      },
+      buildings:[
+        {name:'Head Office – Oslo CBD', category:'Office',    delivered_kwh:450000, reduction_kwh:120000, cost_nok:1800000},
+        {name:'Regional Warehouse – Viken', category:'Warehouse', delivered_kwh:320000, reduction_kwh:70000,  cost_nok:1100000},
+        {name:'Retail Unit – Bergen', category:'Retail',    delivered_kwh:180000, reduction_kwh:45000,  cost_nok:600000}
+      ]
+    };
+  }
+
+  // ---------- Presets & lenders ----------
+  const presets = {
+    custom:{rate:30, cap:10000000},
+    yrkesbygg:{rate:30, cap:10000000},
+    kartlegging:{rate:50, cap:400000}
+  };
+
+  const lenders = [
+    { name:'GreenBank',     baseRate:5.8, greenDisc:0.5, maxLTV:0.85, minDSCR:1.10, maxTenor:7, feeBps:100, esgScore:86, taxonomy:65 },
+    { name:'NordicLease',   baseRate:6.4, greenDisc:0.7, maxLTV:0.90, minDSCR:1.00, maxTenor:6, feeBps:75,  esgScore:78, taxonomy:58 },
+    { name:'ImpactCapital', baseRate:6.0, greenDisc:0.4, maxLTV:0.80, minDSCR:1.20, maxTenor:8, feeBps:120, esgScore:91, taxonomy:72 },
+    { name:'FjordBank',     baseRate:6.1, greenDisc:0.6, maxLTV:0.88, minDSCR:1.15, maxTenor:7, feeBps:90,  esgScore:83, taxonomy:62 },
+    { name:'Aurora Finans', baseRate:5.9, greenDisc:0.3, maxLTV:0.82, minDSCR:1.25, maxTenor:8, feeBps:110, esgScore:88, taxonomy:69 }
+  ];
+
+  // ---------- Row helpers ----------
+  function addRow(){
+    const i = tbody.children.length+1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="Building ${i}"></td>
+      <td>
+        <select class="cat">
+          <option>Office</option><option>Warehouse</option><option>Retail</option>
+          <option>School</option><option>Other</option>
+        </select>
+      </td>
+      <td class="right"><input type="number" class="base" step="1" min="0" placeholder="0"></td>
+      <td class="right"><input type="number" class="red" step="1" min="0" placeholder="0"></td>
+      <td class="right"><span class="pct">–</span></td>
+      <td class="right"><span class="new">–</span></td>
+      <td><span class="pill" data-flag>–</span></td>
+      <td class="right"><input type="number" class="cost" step="1000" min="0" placeholder="0"></td>
+      <td class="right"><button class="del">✕</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('.del').onclick = ()=>{tr.remove(); recalc(); autosave();};
+    tr.querySelectorAll('input,select').forEach(inp=>inp.oninput=()=>{recalc(); autosave();});
+    return tr;
+  }
+  function setRow(tr, b){
+    tr.querySelector('input[type=text]').value = b.name;
+    tr.querySelector('.cat').value = b.category;
+    tr.querySelector('.base').value = b.delivered_kwh;
+    tr.querySelector('.red').value  = b.reduction_kwh;
+    tr.querySelector('.cost').value = b.cost_nok;
+  }
+
+  // ---------- CSV export ----------
+  function csvEscape(v){ return `"${String(v).replaceAll('"','""')}"`; }
+  function exportCSV(){
+    const rows=[["Building","Category","Delivered (kWh/yr)","Reduction (kWh)","Reduction (%)","New energy","≥20%","Cost (NOK)"]];
+    [...tbody.children].forEach(tr=>{
+      const name = tr.querySelector('input[type=text]').value||'';
+      const cat = tr.querySelector('.cat').value;
+      const b = +tr.querySelector('.base').value||0;
+      const r = +tr.querySelector('.red').value||0;
+      const pct = b? (r/b):0;
+      const n = Math.max(b-r,0);
+      const flag = b? (pct>=0.2?'YES':'NO') : '';
+      const cost = +tr.querySelector('.cost').value||0;
+      rows.push([name,cat,b,r,pct,n,flag,cost]);
+    });
+    const csv = rows.map(row=>row.map(csvEscape).join(",")).join("\n");
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'enova_buildings.csv';
+    a.click();
+  }
+
+  // ---------- Finance helpers ----------
+  function annuityPMT(principal, ratePct, years){
+    const r = ratePct/100/12, n=years*12;
+    if(!principal || years<=0) return 0;
+    if(r===0) return principal/n;
+    return principal*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+  }
+  function npv(cashflows, discPct){
+    const r = discPct/100;
+    return cashflows.reduce((acc,cf,t)=> acc + cf/Math.pow(1+r,t), 0);
+  }
+  const clamp = (x,a,b)=> Math.max(a, Math.min(b, x));
+  const setFlags = (el, arr)=> el.innerHTML = arr.length
+      ? arr.map(f=>`<span class="pill ${f.c}" style="margin-right:6px">${f.t}</span>`).join(' ')
+      : '<span class="pill ok">Pre-check OK</span>';
+
+  // ---------- Green lender comparison ----------
+  function getWeights(){
+    const g = id => +document.getElementById(id).value;
+    const w = { rate:g('w_rate'), dscr:g('w_dscr'), ltv:g('w_ltv'), green:g('w_green'), fee:g('w_fee'), esg:g('w_esg') };
+    const sum = Object.values(w).reduce((a,b)=>a+b,0) || 1;
+    return { w, sum };
+  }
+  function normLower(x, min, max){ if(max===min) return 0; const v=(max-x)/(max-min); return Math.max(0,Math.min(1,v)); }
+  function normHigher(x, min, max){ if(max===min) return 0; const v=(x-min)/(max-min); return Math.max(0,Math.min(1,v)); }
+
+  function computeLenderScores(context){
+    const minRate = Math.min(...lenders.map(l=>l.baseRate));
+    const maxRate = Math.max(...lenders.map(l=>l.baseRate));
+    const minFee  = Math.min(...lenders.map(l=>l.feeBps));
+    const maxFee  = Math.max(...lenders.map(l=>l.feeBps));
+    const minLTV  = Math.min(...lenders.map(l=>l.maxLTV));
+    const maxLTV  = Math.max(...lenders.map(l=>l.maxLTV));
+    const minDSCR = Math.min(...lenders.map(l=>l.minDSCR));
+    const maxDSCR = Math.max(...lenders.map(l=>l.minDSCR));
+    const minDisc = Math.min(...lenders.map(l=>l.greenDisc));
+    const maxDisc = Math.max(...lenders.map(l=>l.greenDisc));
+    const minESG  = Math.min(...lenders.map(l=>l.esgScore));
+    const maxESG  = Math.max(...lenders.map(l=>l.esgScore));
+    const {w,sum} = getWeights();
+
+    return lenders.map(l=>{
+      const sRate  = normLower(l.baseRate, minRate, maxRate);
+      const sFee   = normLower(l.feeBps,  minFee,  maxFee);
+      const sLTV   = normHigher(l.maxLTV, minLTV,  maxLTV);
+      const sDSCR  = normLower(l.minDSCR, minDSCR, maxDSCR); // lower min DSCR = easier to qualify
+      const sGreen = normHigher(l.greenDisc, minDisc, maxDisc);
+      const sESG   = normHigher(l.esgScore, minESG, maxESG);
+
+      const composite = (sRate*w.rate + sDSCR*w.dscr + sLTV*w.ltv + sGreen*w.green + sFee*w.fee + sESG*w.esg) / sum;
+      return {...l, score: Math.round(composite*100)};
+    });
+  }
+
+  function renderComparison(context){
+    ['w_rate','w_dscr','w_ltv','w_green','w_fee','w_esg'].forEach(id=>{
+      const el = document.getElementById(id+'_v'); if(el) el.textContent = (+document.getElementById(id).value).toFixed(1);
+    });
+    const rows = computeLenderScores(context).sort((a,b)=>b.score-a.score);
+    const top = document.getElementById('cmp_top'); if(top) top.textContent = rows.length? rows[0].score : '–';
+    const lead= document.getElementById('cmp_leader'); if(lead) lead.textContent = rows.length? rows[0].name : '–';
+
+    const body = document.getElementById('cmpBody');
+    if(body){
+      body.innerHTML = rows.map(r=>`
+        <tr>
+          <td>${r.name}</td>
+          <td class="right">${r.baseRate.toFixed(2)}</td>
+          <td class="right">${r.greenDisc.toFixed(1)}</td>
+          <td class="right">${(r.maxLTV*100).toFixed(0)}%</td>
+          <td class="right">${r.minDSCR.toFixed(2)}</td>
+          <td class="right">${r.feeBps}</td>
+          <td class="right">${r.esgScore}</td>
+          <td class="right">${r.taxonomy}%</td>
+          <td class="right"><strong>${r.score}</strong></td>
+        </tr>`).join('');
+    }
+
+    const canvas = document.getElementById('cmpChart');
+    if(canvas){
+      const labels = rows.map(r=>r.name);
+      const data = rows.map(r=>r.score);
+      if(!cmpChart){
+        cmpChart = new Chart(canvas,{
+          type:'bar',
+          data:{ labels, datasets:[{label:'Composite score', data, backgroundColor:'rgba(31,138,82,0.7)'}]},
+          options:{ scales:{ y:{beginAtZero:true, max:100, grid:{color:'#eef2f5'}}, x:{grid:{display:false}} },
+                    plugins:{legend:{display:false}} }
+        });
+      }else{
+        cmpChart.data.labels = labels; cmpChart.data.datasets[0].data = data; cmpChart.update();
+      }
+    }
+  }
+
+  function enableCmpSorting(){
+    document.querySelectorAll('.sortable th').forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const k = th.dataset.k; if(!k) return;
+        const ctx = window.__cmpContext || {};
+        const rows = computeLenderScores(ctx);
+        const dir = th.dataset.dir==='asc' ? 'desc' : 'asc';
+        th.dataset.dir = dir;
+        rows.sort((a,b)=>{
+          const av = (k==='name')? String(a[k]).toLowerCase() : a[k];
+          const bv = (k==='name')? String(b[k]).toLowerCase() : b[k];
+          if(av<bv) return dir==='asc' ? -1 : 1;
+          if(av>bv) return dir==='asc' ? 1 : -1;
+          return 0;
+        });
+        const body = document.getElementById('cmpBody');
+        if(body){
+          body.innerHTML = rows.map(r=>`
+            <tr>
+              <td>${r.name}</td>
+              <td class="right">${r.baseRate.toFixed(2)}</td>
+              <td class="right">${r.greenDisc.toFixed(1)}</td>
+              <td class="right">${(r.maxLTV*100).toFixed(0)}%</td>
+              <td class="right">${r.minDSCR.toFixed(2)}</td>
+              <td class="right">${r.feeBps}</td>
+              <td class="right">${r.esgScore}</td>
+              <td class="right">${r.taxonomy}%</td>
+              <td class="right"><strong>${r.score}</strong></td>
+            </tr>`).join('');
+        }
+        if(cmpChart){
+          cmpChart.data.labels = rows.map(r=>r.name);
+          cmpChart.data.datasets[0].data = rows.map(r=>r.score);
+          cmpChart.update();
+        }
+      });
+    });
+  }
+
+  // ---------- Serialize / load ----------
+  function getStateFromUI(){
+    return {
+      inputs:{
+        preset:qs('#preset').value,
+        rate:+qs('#rate').value, cap:+qs('#cap').value,
+        price:+qs('#price').value, disc:+qs('#disc').value, horizon:+qs('#horizon').value,
+        rateInt:+qs('#rateInt').value, greenDisc:+qs('#greenDisc').value, term:+qs('#term').value,
+        appDate:qs('#appDate').value || null, startDate:qs('#startDate').value || null,
+        docs:{epc:qs('#docEPC').checked,costs:qs('#docCosts').checked,before:qs('#docBefore').checked,final:qs('#docFinal').checked},
+        bridgeMonths:+qs('#bridgeMonths').value, bridgeRate:+qs('#bridgeRate').value, bridgeShare:+qs('#bridgeShare').value
+      },
+      buildings:[...tbody.children].map(tr=>({
+        name: tr.querySelector('input[type=text]').value,
+        category: tr.querySelector('.cat').value,
+        delivered_kwh: +tr.querySelector('.base').value||0,
+        reduction_kwh: +tr.querySelector('.red').value||0,
+        cost_nok: +tr.querySelector('.cost').value||0
+      }))
+    };
+  }
+  function loadStateToUI(state){
+    const i = state.inputs;
+    qs('#preset').value = i.preset || 'custom';
+    qs('#rate').value = i.rate; qs('#cap').value = i.cap;
+    qs('#price').value = i.price; qs('#disc').value = i.disc; qs('#horizon').value = i.horizon;
+    qs('#rateInt').value = i.rateInt; qs('#greenDisc').value = i.greenDisc; qs('#term').value = i.term;
+    qs('#appDate').value = i.appDate || ''; qs('#startDate').value = i.startDate || '';
+    qs('#docEPC').checked = !!i.docs?.epc; qs('#docCosts').checked = !!i.docs?.costs;
+    qs('#docBefore').checked = !!i.docs?.before; qs('#docFinal').checked = !!i.docs?.final;
+    qs('#bridgeMonths').value = i.bridgeMonths; qs('#bridgeRate').value = i.bridgeRate; qs('#bridgeShare').value = i.bridgeShare;
+
+    tbody.innerHTML='';
+    (state.buildings||[]).forEach(b=>{ const tr = addRow(); setRow(tr,b); });
+    if(tbody.children.length===0){ for(let k=0;k<3;k++) addRow(); }
+    recalc(); // compute everything
+  }
+  function autosave(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(getStateFromUI())); }catch{} }
+
+  // ---------- Core recalc ----------
+  function recalc(){
+    if(qs('#preset').value!=='custom'){
+      const p = presets[qs('#preset').value];
+      qs('#rate').value = p.rate;
+      qs('#cap').value = p.cap;
+    }
+
+    let baseT=0, redT=0, newT=0, costT=0, any=false;
+    const cats = {};
+    [...tbody.children].forEach(tr=>{
+      const b = +tr.querySelector('.base').value||0;
+      const r = +tr.querySelector('.red').value||0;
+      const pct = b? (r/b):0;
+      const n = Math.max(b-r,0);
+      const flag = tr.querySelector('[data-flag]');
+      tr.querySelector('.pct').textContent = b? (pct*100).toFixed(1)+' %' : '–';
+      tr.querySelector('.new').textContent = b? fmtInt(n) : '–';
+
+      if(b){
+        any = true;
+        const ok = pct>=0.20;
+        flag.textContent = ok?'YES':'NO';
+        flag.className = `pill ${ok?'ok':'bad'}`;
+      } else { flag.textContent='–'; flag.className='pill'; }
+
+      baseT+=b; redT+=r; newT+=n; costT+=(+tr.querySelector('.cost').value||0);
+
+      const cat = tr.querySelector('.cat').value;
+      if(!cats[cat]) cats[cat]={b:0,r:0};
+      cats[cat].b += b; cats[cat].r += r;
+    });
+
+    qs('#sumBase').textContent = baseT?fmtInt(baseT):'–';
+    qs('#sumRed').textContent  = redT?fmtInt(redT):'–';
+    qs('#sumNew').textContent  = newT?fmtInt(newT):'–';
+    const wgt = baseT? redT/baseT : 0;
+    qs('#waPct').textContent = baseT?fmtPct(wgt):'–';
+    qs('#sumCost').textContent = costT?fmtKr(costT):'–';
+
+    const rate = (+qs('#rate').value||0)/100;
+    const cap  = +qs('#cap').value||0;
+    const grant = Math.min(rate*costT, cap);
+    const need  = Math.max(costT - grant, 0);
+
+    const price = +qs('#price').value||0;
+    const annualSave = redT * price;
+    const payback = annualSave>0 ? (need/annualSave) : null;
+    const disc = +qs('#disc').value||0;
+    const horizon = +qs('#horizon').value||10;
+    const projectNPV = npv([ -need, ...Array.from({length:horizon},()=>annualSave) ], disc);
+
+    const flags=[];
+    const app = qs('#appDate').value ? new Date(qs('#appDate').value) : null;
+    const start = qs('#startDate').value ? new Date(qs('#startDate').value) : null;
+    if(app && start && start < app) flags.push({t:'Project started before application — grant at risk.', c:'bad'});
+    if(any && wgt < 0.20) flags.push({t:'Weighted reduction < 20% — below minimum.', c:'warn'});
+    Object.entries(cats).forEach(([cat,val])=>{
+      if(val.b>0 && (val.r/val.b) < 0.20) flags.push({t:`${cat}: < 20%`, c:'warn'});
+    });
+    setFlags(qs('#complianceFlags'), flags);
+
+    qs('#wgtBadge').textContent = baseT?fmtPct(wgt):'–';
+    qs('#wgtBadge').className = `pill ${wgt>=0.2?'ok':'warn'}`;
+    qs('#grantBadge').textContent = fmtKr(grant);
+    qs('#needBadge').textContent = fmtKr(need);
+
+    qs('#k_cost').textContent = fmtKr(costT);
+    qs('#k_grant').textContent= fmtKr(grant);
+    qs('#k_need').textContent = fmtKr(need);
+    qs('#k_save').textContent = annualSave? fmtKr(annualSave) : '–';
+    qs('#k_payback').textContent = (payback!==null && isFinite(payback))? payback.toFixed(1)+' yrs' : '–';
+    qs('#k_npv').textContent = fmtKr(projectNPV);
+
+    const baseRate = +qs('#rateInt').value||0;
+    const greenDisc = (wgt>=0.20)? (+qs('#greenDisc').value||0) : 0;
+    const effRate = Math.max(baseRate - greenDisc, 0);
+    const termY = +qs('#term').value||5;
+    const pmt = annuityPMT(need, effRate, termY);
+    const ads = pmt*12;
+    const dscr = ads>0 ? (annualSave/ads) : 0;
+    qs('#k_dscr').textContent = ads>0? dscr.toFixed(2) : '–';
+
+    // Stress sliders
+    const sRateDelta = +qs('#s_rate').value;
+    const sPriceDelta= +qs('#s_price').value;
+    const sReduxPP   = +qs('#s_redux').value;
+    qs('#s_rate_v').textContent = sRateDelta.toFixed(1)+' pp';
+    qs('#s_price_v').textContent= (sPriceDelta>0?'+':'')+sPriceDelta+' %';
+    qs('#s_redux_v').textContent= (sReduxPP>0?'+':'')+sReduxPP+' pp';
+
+    const stressRate = Math.max(effRate + sRateDelta, 0);
+    const stressPrice= price * (1 + sPriceDelta/100);
+    const achievedPct= clamp((wgt*100 + sReduxPP)/100, 0, 1);
+
+    let stressGrant = grant;
+    if(achievedPct < 0.20){ stressGrant = 0; }
+    else if(achievedPct < wgt){
+      const missPP = Math.round((wgt - achievedPct)*100);
+      const cut = clamp(missPP*0.10, 0, 1);
+      stressGrant = grant * (1 - cut);
+    }
+    const stressNeed = Math.max(costT - stressGrant, 0);
+    const stressSave = redT * stressPrice * (achievedPct/(wgt||1));
+    const pmtS = annuityPMT(stressNeed, stressRate, termY);
+    const adsS = pmtS*12;
+    const dscrS= adsS>0 ? (stressSave/adsS) : 0;
+    const pd = clamp(1 - dscrS/1.5, 0, 1);
+    const npvS = npv([ -stressNeed, ...Array.from({length:horizon},()=>stressSave) ], disc);
+    qs('#st_dscr').textContent = adsS>0? dscrS.toFixed(2) : '–';
+    qs('#st_pd').textContent = (pd*100).toFixed(0)+' %';
+    qs('#st_npv').textContent = fmtKr(npvS);
+
+    // Credit chart
+    const ltv = costT ? (need/costT) : 0;
+    const pointColor = dscr>=1.2 && ltv<=0.85 ? '#1f8a52' : (dscr>=1.1 && ltv<=0.90 ? '#d99000' : '#c93847');
+    const bubble = [{x: ltv*100, y: dscr, r: Math.max(6, Math.min(24, need/150000))}];
+
+    if(!creditChart){
+      creditChart = new Chart(qs('#creditChart'),{
+        type:'bubble',
+        data:{ datasets:[{label:'Project', data:bubble, backgroundColor:pointColor, borderWidth:0}] },
+        options:{
+          scales:{
+            x:{ title:{display:true,text:'LTV (%)'}, min:0,max:120, grid:{color:'#eef2f5'} },
+            y:{ title:{display:true,text:'DSCR'},   min:0,max:2.0,  grid:{color:'#eef2f5'} }
+          },
+          plugins:{
+            legend:{display:false},
+            annotation:{
+              annotations:{
+                safeZone:{ type:'box', xMin:0, xMax:85, yMin:1.2, yMax:2.0, backgroundColor:'rgba(31,138,82,0.08)', borderWidth:0 }
+              }
+            },
+            tooltip:{callbacks:{label:(ctx)=>` LTV ${ctx.raw.x.toFixed(1)} %, DSCR ${ctx.raw.y.toFixed(2)}`}}
+          }
+        }
+      });
+    } else {
+      creditChart.data.datasets[0].data = bubble;
+      creditChart.data.datasets[0].backgroundColor = pointColor;
+      creditChart.update();
+    }
+
+    // ---- Green lender comparison render ----
+    const cmpContext = { ltv, dscr, need: need };
+    window.__cmpContext = cmpContext;
+    renderComparison(cmpContext);
+
+    // Bridge → Grant → Term
+    const bridgeMonths = +qs('#bridgeMonths').value||6;
+    const bridgeRate = +qs('#bridgeRate').value||8;
+    const bridgeShare = Math.max(0, Math.min(+qs('#bridgeShare').value/100, 1));
+    const grantPortion = stressGrant;
+    const bridgePrincipal = Math.min( grantPortion * bridgeShare, stressNeed );
+    const termPrincipal = Math.max(stressNeed - bridgePrincipal, 0);
+
+    const months = termY*12;
+    const seriesIn=[], seriesOut=[];
+    seriesIn.push(bridgePrincipal>0? bridgePrincipal : 0); seriesOut.push(0);
+    const rB = bridgeRate/100/12;
+    for(let m=1;m<=bridgeMonths;m++){ seriesIn.push(0); seriesOut.push(bridgePrincipal*rB); }
+    seriesIn[bridgeMonths] += grantPortion;
+    seriesOut[bridgeMonths] += bridgePrincipal;
+    const pmtTerm = annuityPMT(termPrincipal, stressRate, termY);
+    for(let m=bridgeMonths+1;m<=months;m++){
+      seriesIn[m] = seriesIn[m]||0; seriesOut[m] = (seriesOut[m]||0) + pmtTerm;
+    }
+    const sumBridgeInterest = bridgePrincipal*rB*bridgeMonths;
+    const sumTermInterest = (pmtTerm*months) - termPrincipal;
+    const sumInterest = sumBridgeInterest + Math.max(sumTermInterest,0);
+    const blendedRate = stressNeed>0? ((sumInterest/(stressNeed))* (12/months) *100).toFixed(2)+' %' : '–';
+    qs('#sum_interest').textContent = fmtKr(sumInterest);
+    qs('#blend_rate').textContent = blendedRate;
+
+    if(!flowChart){
+      flowChart = new Chart(qs('#flowChart'),{
+        type:'line',
+        data:{
+          labels: Array.from({length:months+1},(_,i)=> (i===0?'0':String(i)) ),
+          datasets:[
+            {label:'Inflows', data:seriesIn, borderColor:'#1f8a52', backgroundColor:'rgba(31,138,82,0.12)', fill:true, tension:0.2},
+            {label:'Outflows',data:seriesOut.map(v=>-v), borderColor:'#c93847', backgroundColor:'rgba(201,56,71,0.08)', fill:true, tension:0.2}
+          ]
+        },
+        options:{
+          responsive:true,
+          scales:{ y:{ title:{display:true,text:'NOK / month'}, grid:{color:'#eef2f5'}}, x:{ grid:{color:'#f4f6f8'}} },
+          plugins:{ legend:{labels:{usePointStyle:true, pointStyle:'line'} } }
+        }
+      });
+    } else {
+      flowChart.data.labels = Array.from({length:months+1},(_,i)=> (i===0?'0':String(i)) );
+      flowChart.data.datasets[0].data = seriesIn;
+      flowChart.data.datasets[1].data = seriesOut.map(v=>-v);
+      flowChart.update();
+    }
+
+    // Reporting timeline
+    let labels = [], offsets = [], durations = [];
+    if(grant > 500000){ labels.push('Interim report 1'); offsets.push(6); durations.push(1);
+                        labels.push('Interim report 2'); offsets.push(12); durations.push(1); }
+    labels.push('Final report'); offsets.push(18); durations.push(6);
+    if(!timelineChart){
+      timelineChart = new Chart(qs('#timelineChart'),{
+        type:'bar',
+        data:{ labels,
+          datasets:[
+            {label:'Start (months)', data:offsets, backgroundColor:'rgba(31,138,82,0.10)', stack:'t', borderWidth:0},
+            {label:'Duration (months)', data:durations, backgroundColor:'rgba(31,138,82,0.70)', borderColor:'#1f8a52', borderWidth:1, stack:'t'}
+          ]},
+        options:{ indexAxis:'y',
+          scales:{ x:{ title:{display:true,text:'Months from start'}, stacked:true, min:0, max:30, grid:{color:'#eef2f5'} },
+                   y:{ stacked:true, grid:{display:false} } },
+          plugins:{ legend:{display:false} }
+        }
+      });
+    } else {
+      timelineChart.data.labels = labels;
+      timelineChart.data.datasets[0].data = offsets;
+      timelineChart.data.datasets[1].data = durations;
+      timelineChart.update();
+    }
+
+    // Offers
+    const offers=[];
+    lenders.forEach(L=>{
+      if(stressNeed<=0) return;
+      const ltvS = costT? (stressNeed/costT):0;
+      if(ltvS > L.maxLTV) return;
+      if(termY > L.maxTenor) return;
+      const r = Math.max(L.baseRate - ( (wgt>=0.20)?L.greenDisc:0 ), 0);
+      const pmtL = annuityPMT(stressNeed, r, termY);
+      const adsL = pmtL*12;
+      const dscrL= adsL>0? (stressSave/adsL) : 0;
+      if(dscrL < L.minDSCR) return;
+      const fee = stressNeed * (L.feeBps/10000);
+      const totInt = (pmtL*12*termY) - stressNeed;
+      offers.push({lender:L.name, rate:r, tenor:termY, monthly:pmtL, fee, totalInterest:totInt, ltv:ltvS, dscr:dscrL});
+    });
+    const offersBox = qs('#offers');
+    offersBox.innerHTML = offers.length===0
+      ? `<div class="muted">No offers passed the rules (LTV/DSCR/tenor). Adjust measures or terms.</div>`
+      : `<table>
+          <thead><tr>
+            <th>Lender</th><th class="right">Rate</th><th class="right">Tenor</th>
+            <th class="right">Monthly</th><th class="right">Arrangement fee</th>
+            <th class="right">Total interest</th><th class="right">LTV</th><th class="right">DSCR</th>
+          </tr></thead>
+          <tbody>
+            ${offers.sort((a,b)=>a.rate-b.rate).map(o=>`
+              <tr>
+                <td>${o.lender}</td>
+                <td class="right">${o.rate.toFixed(2)} %</td>
+                <td class="right">${o.tenor} yrs</td>
+                <td class="right">${fmtKr(o.monthly)}</td>
+                <td class="right">${fmtKr(o.fee)}</td>
+                <td class="right">${fmtKr(o.totalInterest)}</td>
+                <td class="right">${(o.ltv*100).toFixed(1)} %</td>
+                <td class="right">${o.dscr.toFixed(2)}</td>
+              </tr>`).join('')}
+          </tbody></table>`;
+
+    // Term sheet + JSON
+    qs('#makeTerm').onclick = ()=>{
+      if(offers.length===0){ qs('#termSheet').innerHTML='<div class="muted">No qualifying offers to show.</div>'; return; }
+      const o = offers[0];
+      qs('#termSheet').innerHTML = `
+        <div class="card" style="background:#fff;margin-top:6px">
+          <h3 style="margin:0 0 6px">Non-binding Term Sheet — ${o.lender}</h3>
+          <ul style="margin:0 0 6px 18px">
+            <li>Financed amount: <strong>${fmtKr(stressNeed)}</strong></li>
+            <li>Interest (nominal): <strong>${o.rate.toFixed(2)} % p.a.</strong></li>
+            <li>Tenor: <strong>${o.tenor} years</strong> (annuity)</li>
+            <li>Monthly payment (est.): <strong>${fmtKr(o.monthly)}</strong></li>
+            <li>Arrangement fee: <strong>${fmtKr(o.fee)}</strong></li>
+            <li>Estimated total interest: <strong>${fmtKr(o.totalInterest)}</strong></li>
+            <li>Condition: Energy reduction ≥ 20% and project delivered per application. Bridge → grant → term as agreed.</li>
+          </ul>
+          <div class="tiny">Demo simulation. Actual terms set by lender.</div>
+        </div>`;
+    };
+
+    const payload = {
+      program: qs('#preset').value,
+      supportRatePct: +qs('#rate').value,
+      supportCap: +qs('#cap').value,
+      energyPrice: +qs('#price').value,
+      discountRatePct: +qs('#disc').value,
+      horizonYears: +qs('#horizon').value,
+      baseRatePct: +qs('#rateInt').value,
+      greenDiscountPctPts: +qs('#greenDisc').value,
+      termYears: termY,
+      dates:{ application: qs('#appDate').value || null, start: qs('#startDate').value || null },
+      documents:{
+        epc: qs('#docEPC').checked, costs: qs('#docCosts').checked,
+        before: qs('#docBefore').checked, final: qs('#docFinal').checked
+      },
+      buildings: [...tbody.children].map(tr=>({
+        name: tr.querySelector('input[type=text]').value,
+        category: tr.querySelector('.cat').value,
+        delivered_kwh: +tr.querySelector('.base').value||0,
+        reduction_kwh: +tr.querySelector('.red').value||0,
+        cost_nok: +tr.querySelector('.cost').value||0
+      }))
+    };
+    qs('#jsonOut').textContent = JSON.stringify(payload, null, 2);
+  }
+
+  // ---------- Bindings ----------
+  ['#preset','#rate','#cap','#price','#disc','#horizon','#rateInt','#greenDisc','#term',
+   '#appDate','#startDate','#docEPC','#docCosts','#docBefore','#docFinal',
+   '#bridgeMonths','#bridgeRate','#bridgeShare',
+   '#s_rate','#s_price','#s_redux'
+  ].forEach(sel=>{ const el=document.querySelector(sel); if(el) el.oninput = ()=>{recalc(); autosave();}; });
+
+  // comparison sliders
+  ['#w_rate','#w_dscr','#w_ltv','#w_green','#w_fee','#w_esg']
+    .forEach(sel=>{ const el=document.querySelector(sel); if(el) el.oninput = ()=> renderComparison(window.__cmpContext||{}); });
+
+  qs('#addRow').onclick = ()=>{ addRow(); autosave(); };
+  qs('#clearAll').onclick = ()=>{ tbody.innerHTML=''; for(let i=0;i<3;i++) addRow(); recalc(); autosave(); };
+  qs('#exportCSV').onclick = exportCSV;
+
+  qs('#saveBtn').onclick = ()=>{ autosave(); alert('Saved to this browser ✔'); };
+  qs('#loadBtn').onclick = ()=>{
+    try{
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(!saved) return alert('No saved draft found.');
+      loadStateToUI(JSON.parse(saved));
+      alert('Loaded from this browser ✔');
+    }catch{ alert('Could not load.'); }
+  };
+  qs('#resetExample').onclick = (e)=>{ e.preventDefault(); const ex = exampleState(); loadStateToUI(ex); try{ localStorage.removeItem(STORAGE_KEY);}catch{} };
+
+  // Extra actions: Export JSON + Print
+  qs('#exportJSON').onclick = ()=>{
+    try{
+      const blob = new Blob([document.getElementById('jsonOut').textContent||'{}'], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'enerbridge_application.json';
+      a.click();
+    }catch{ alert('Could not export JSON.'); }
+  };
+  qs('#printTS').onclick = ()=> window.print();
+
+  // ---------- Init ----------
+  const saved = (()=>{ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); }catch{ return null; }})();
+  if(saved){ loadStateToUI(saved); } else { loadStateToUI(exampleState()); }
+
+  // Enable comparison sorting
+  enableCmpSorting();
+})();
+</script>
+</body>
+</html>
